@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Aero Scale Tracker Pro</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--primary);
+            color: var(--text);
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background-attachment: fixed;
+        }
+
+        .app-header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            background: var(--secondary);
+            margin: 1rem;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-size: 0.875rem;
+        }
+
+        .nav-tab.active {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 0 1rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.danger::before { background: var(--danger); }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .data-table-container {
+            background: var(--secondary);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+
+        .table-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        thead {
+            background: rgba(255,255,255,0.03);
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-available {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-checked-out {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .status-overdue {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--secondary);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <a href="#" class="logo">
+        <span>⚡</span>
+        AERO SCALE TRACKER
+    </a>
+    <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-secondary" onclick="app.exportData()" style="font-size: 0.75rem;">Export</button>
+    </div>
+</header>
+
+<nav class="nav-tabs">
+    <button class="nav-tab active" onclick="router.navigate('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="router.navigate('scales')">Scales</button>
+    <button class="nav-tab" onclick="router.navigate('vessels')">Vessels</button>
+</nav>
+
+<main class="main-content">
+    <div id="dashboard" class="view active">
+        <div class="card-grid">
+            <div class="stat-card success">
+                <div class="stat-label">Available Scales</div>
+                <div class="stat-value" id="stat-available">0</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">Checked Out</div>
+                <div class="stat-value" id="stat-checked">0</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-label">Overdue Returns</div>
+                <div class="stat-value" id="stat-overdue">0</div>
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <div class="table-header">
+                <div class="table-title">Quick Actions</div>
+            </div>
+            <div style="padding: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="modals.open('checkout')">Check Out Scale</button>
+                <button class="btn btn-secondary" onclick="modals.open('checkin')">Return Scale</button>
+                <button class="btn btn-secondary" onclick="modals.open('add-scale')">Add New Scale</button>
+            </div>
+        </div>
+
+        <div class="data-table-container" style="margin-top: 1.5rem;">
+            <div class="table-header">
+                <div class="table-title">Priority Items</div>
+            </div>
+            <div id="priority-list" style="padding: 1rem;"></div>
+        </div>
+    </div>
+
+    <div id="scales" class="view">
+        <div class="data-table-container">
+            <div class="table-header">
+                <div class="table-title">Scale Inventory</div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Serial #</th>
+                            <th>Status</th>
+                            <th>Vessel</th>
+                            <th>Date Out</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scales-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="vessels" class="view">
+        <div class="data-table-container">
+            <div class="table-header">
+                <div class="table-title">Vessel Registry</div>
+                <button class="btn btn-primary btn-sm" onclick="modals.open('add-vessel')">Add Vessel</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vessel Name</th>
+                        <th>Ice Default (tons)</th>
+                        <th>Active Scales</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="vessels-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="modals.close()"></div>
+
+<div class="modal" id="modal-checkout" style="display: none;">
+    <div class="modal-header">
+        <div class="modal-title">Check Out Scale</div>
+        <button class="modal-close" onclick="modals.close()">&times;</button>
+    </div>
+    <div class="modal-body">
+        <form onsubmit="app.handleCheckout(event)">
+            <div class="form-group">
+                <label class="form-label">Select Scale</label>
+                <select class="form-select" id="checkout-scale" required></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Vessel Name</label>
+                <input type="text" class="form-input" id="checkout-vessel" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Contact</label>
+                    <input type="text" class="form-input" id="checkout-contact">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Return Date</label>
+                    <input type="date" class="form-input" id="checkout-return" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <input type="text" class="form-input" id="checkout-notes" placeholder="Buckets, chargers, etc...">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Complete Check Out</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="modal-checkin" style="display: none;">
+    <div class="modal-header">
+        <div class="modal-title">Return Scale</div>
+        <button class="modal-close" onclick="modals.close()">&times;</button>
+    </div>
+    <div class="modal-body">
+        <form onsubmit="app.handleCheckin(event)">
+            <div class="form-group">
+                <label class="form-label">Select Scale to Return</label>
+                <select class="form-select" id="checkin-scale" required></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Condition Notes</label>
+                <input type="text" class="form-input" id="checkin-condition" placeholder="Any damage?">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Process Return</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="modal-add-scale" style="display: none;">
+    <div class="modal-header">
+        <div class="modal-title">Add New Scale</div>
+        <button class="modal-close" onclick="modals.close()">&times;</button>
+    </div>
+    <div class="modal-body">
+        <form onsubmit="app.handleAddScale(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Model</label>
+                    <select class="form-select" id="new-scale-model" required>
+                        <option>Porta Weigh (digital)</option>
+                        <option>Ocean King - D6 Digital</option>
+                        <option>Island Scales</option>
+                        <option>Richmond Scale</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" class="form-input" id="new-scale-serial" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Scale</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="modal-add-vessel" style="display: none;">
+    <div class="modal-header">
+        <div class="modal-title">Register Vessel</div>
+        <button class="modal-close" onclick="modals.close()">&times;</button>
+    </div>
+    <div class="modal-body">
+        <form onsubmit="app.handleAddVessel(event)">
+            <div class="form-group">
+                <label class="form-label">Vessel Name</label>
+                <input type="text" class="form-input" id="new-vessel-name" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Default Ice (tons)</label>
+                    <input type="number" class="form-input" id="new-vessel-ice" step="0.5" value="10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Scales Needed</label>
+                    <input type="number" class="form-input" id="new-vessel-scales" value="2">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Register Vessel</button>
+        </form>
+    </div>
+</div>
+
+<script>
+const Store = {
+    data: {
+        scales: JSON.parse(localStorage.getItem('aero_scales')) || [
+            {id: 1, model: 'Porta Weigh (digital)', serial: '11756/15831', status: 'available', vessel: null, dateOut: null, notes: ''},
+            {id: 2, model: 'Porta Weigh (digital)', serial: '14116/18042', status: 'available', vessel: null, dateOut: null, notes: ''},
+            {id: 3, model: 'Ocean King - D6 Digital', serial: '8804', status: 'available', vessel: null, dateOut: null, notes: ''},
+            {id: 4, model: 'Ocean King - D6 Digital', serial: '9015', status: 'maintenance', vessel: null, dateOut: null, notes: 'Repaired Fall 2024'},
+            {id: 5, model: 'Ocean King - D6 Digital', serial: '78328', status: 'available', vessel: null, dateOut: null, notes: 'Wont zero'},
+        ],
+        vessels: JSON.parse(localStorage.getItem('aero_vessels')) || [
+            {name: 'Ocean Mistress', iceDefault: 14, scalesNeeded: 2},
+            {name: 'Wespak', iceDefault: 16, scalesNeeded: 2},
+            {name: 'Pacific Baron', iceDefault: 4, scalesNeeded: 1},
+            {name: 'Free To Wander', iceDefault: 10, scalesNeeded: 2},
+        ]
+    },
+    save() {
+        localStorage.setItem('aero_scales', JSON.stringify(this.data.scales));
+        localStorage.setItem('aero_vessels', JSON.stringify(this.data.vessels));
+    },
+    getAvailable() { return this.data.scales.filter(s => s.status === 'available'); },
+    getCheckedOut() { return this.data.scales.filter(s => s.status === 'checked-out'); },
+    getOverdue() {
+        const today = new Date().toISOString().split('T')[0];
+        return this.data.scales.filter(s => s.status === 'checked-out' && s.expectedReturn && s.expectedReturn < today);
+    }
+};
+
+const router = {
+    navigate(view) {
+        document.querySelectorAll('.nav-tab').forEach((tab, i) => {
+            tab.classList.toggle('active', ['dashboard','scales','vessels'][i] === view);
+        });
+        document.querySelectorAll('.view').forEach(v => {
+            v.classList.toggle('active', v.id === view);
+        });
+        if(view === 'dashboard') dashboard.refresh();
+        if(view === 'scales') scalesTable.render();
+        if(view === 'vessels') vesselsTable.render();
+    }
+};
+
+const dashboard = {
+    refresh() {
+        document.getElementById('stat-available').textContent = Store.getAvailable().length;
+        document.getElementById('stat-checked').textContent = Store.getCheckedOut().length;
+        document.getElementById('stat-overdue').textContent = Store.getOverdue().length;
+        
+        const list = document.getElementById('priority-list');
+        const overdue = Store.getOverdue();
+        if(overdue.length === 0) {
+            list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 2rem;">All caught up!</div>';
+            return;
+        }
+        list.innerHTML = overdue.map(s => `
+            <div style="padding: 1rem; background: rgba(239,68,68,0.1); border-left: 4px solid var(--danger); border-radius: 8px; margin-bottom: 0.5rem;">
+                <div style="font-weight: 600; color: var(--danger);">OVERDUE: ${s.model} (${s.serial})</div>
+                <div style="font-size: 0.875rem; color: var(--text-muted);">With ${s.vessel}, due ${s.expectedReturn}</div>
+            </div>
+        `).join('');
+    }
+};
+
+const scalesTable = {
+    render() {
+        const tbody = document.getElementById('scales-tbody');
+        tbody.innerHTML = Store.data.scales.map(s => {
+            let statusClass = s.status === 'available' ? 'status-available' : 
+                             (Store.getOverdue().includes(s) ? 'status-overdue' : 'status-checked-out');
+            let statusText = s.status === 'available' ? 'Available' : 
+                            (Store.getOverdue().includes(s) ? 'OVERDUE' : 'Checked Out');
+            return `
+                <tr>
+                    <td>${s.model}</td>
+                    <td>${s.serial}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${s.vessel || '-'}</td>
+                    <td>${s.dateOut ? new Date(s.dateOut).toLocaleDateString() : '-'}</td>
+                    <td>
+                        ${s.status === 'available' 
+                            ? `<button class="btn btn-sm btn-primary" onclick="app.quickCheckout(${s.id})">Check Out</button>`
+                            : `<button class="btn btn-sm btn-secondary" onclick="app.quickCheckin(${s.id})">Return</button>`
+                        }
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+};
+
+const vesselsTable = {
+    render() {
+        const tbody = document.getElementById('vessels-tbody');
+        tbody.innerHTML = Store.data.vessels.map(v => {
+            const active = Store.data.scales.filter(s => s.vessel === v.name).length;
+            return `
+                <tr>
+                    <td>${v.name}</td>
+                    <td>${v.iceDefault}</td>
+                    <td>${active} / ${v.scalesNeeded}</td>
+                    <td><button class="btn btn-sm btn-secondary">View</button></td>
+                </tr>
+            `;
+        }).join('');
+    }
+};
+
+const modals = {
+    open(name) {
+        if(name === 'checkout') {
+            const select = document.getElementById('checkout-scale');
+            select.innerHTML = '<option value="">Select...</option>' + 
+                Store.getAvailable().map(s => `<option value="${s.id}">${s.model} (${s.serial})</option>`).join('');
+            document.getElementById('checkout-return').value = new Date().toISOString().split('T')[0];
+        }
+        if(name === 'checkin') {
+            const select = document.getElementById('checkin-scale');
+            select.innerHTML = '<option value="">Select...</option>' + 
+                Store.getCheckedOut().map(s => `<option value="${s.id}">${s.model} - ${s.vessel}</option>`).join('');
+        }
+        document.getElementById('modal-overlay').classList.add('active');
+        document.getElementById(`modal-${name}`).style.display = 'block';
+    },
+    close() {
+        document.getElementById('modal-overlay').classList.remove('active');
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+};
+
+const app = {
+    handleCheckout(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('checkout-scale').value);
+        const vessel = document.getElementById('checkout-vessel').value;
+        const scale = Store.data.scales.find(s => s.id === id);
+        scale.status = 'checked-out';
+        scale.vessel = vessel;
+        scale.dateOut = new Date().toISOString();
+        scale.expectedReturn = document.getElementById('checkout-return').value;
+        scale.notes = document.getElementById('checkout-notes').value;
+        Store.save();
+        modals.close();
+        dashboard.refresh();
+    },
+    handleCheckin(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('checkin-scale').value);
+        const scale = Store.data.scales.find(s => s.id === id);
+        scale.status = 'available';
+        scale.vessel = null;
+        scale.dateOut = null;
+        scale.expectedReturn = null;
+        Store.save();
+        modals.close();
+        dashboard.refresh();
+    },
+    handleAddScale(e) {
+        e.preventDefault();
+        Store.data.scales.push({
+            id: Date.now(),
+            model: document.getElementById('new-scale-model').value,
+            serial: document.getElementById('new-scale-serial').value,
+            status: 'available',
+            vessel: null,
+            dateOut: null,
+            notes: ''
+        });
+        Store.save();
+        modals.close();
+        scalesTable.render();
+    },
+    handleAddVessel(e) {
+        e.preventDefault();
+        Store.data.vessels.push({
+            name: document.getElementById('new-vessel-name').value,
+            iceDefault: parseFloat(document.getElementById('new-vessel-ice').value),
+            scalesNeeded: parseInt(document.getElementById('new-vessel-scales').value)
+        });
+        Store.save();
+        modals.close();
+        vesselsTable.render();
+    },
+    quickCheckout(id) {
+        modals.open('checkout');
+        document.getElementById('checkout-scale').value = id;
+    },
+    quickCheckin(id) {
+        modals.open('checkin');
+        document.getElementById('checkin-scale').value = id;
+    },
+    exportData() {
+        const data = JSON.stringify(Store.data, null, 2);
+        const blob = new Blob([data], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `scale-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        alert('Data exported!');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => dashboard.refresh());
+</script>
+
+</body>
+</html>
